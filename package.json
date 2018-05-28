@@ -1,0 +1,47 @@
+{
+  "name": "simple-prettier-atom",
+  "version": "0.1.1",
+  "description": "Just runs prettier on the open file and does what you'd expect",
+  "main": "index.bundle.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olsonpm/simple-prettier-atom.git"
+  },
+  "keywords": [
+    "prettier",
+    "atom",
+    "simple"
+  ],
+  "author": "phil olson",
+  "license": "SEE LICENSE IN license.txt",
+  "bugs": {
+    "url": "https://github.com/olsonpm/simple-prettier-atom/issues"
+  },
+  "homepage": "https://github.com/olsonpm/simple-prettier-atom#readme",
+  "dependencies": {
+    "prettier": "^1.13.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-personal": "github:olsonpm/eslint-config-personal",
+    "esm": "^3.0.38",
+    "friendly-errors-webpack-plugin": "^1.7.0",
+    "webpack": "^4.9.1",
+    "webpack-cli": "^2.1.4",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "eslintConfig": {
+    "extends": "personal",
+    "globals": {
+      "atom": false
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "semi": false
+  }
+}
