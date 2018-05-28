@@ -1,0 +1,18 @@
+{
+  "menu": [
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "Simple Prettier Atom",
+          "submenu": [
+            {
+              "label": "Format",
+              "command": "simple-prettier-atom:format"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
