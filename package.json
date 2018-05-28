@@ -1,6 +1,6 @@
 {
   "name": "simple-prettier-atom",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Just runs prettier on the open file and does what you'd expect",
   "main": "index.bundle.js",
   "scripts": {
@@ -22,7 +22,10 @@
   },
   "homepage": "https://github.com/olsonpm/simple-prettier-atom#readme",
   "dependencies": {
-    "prettier": "^1.13.0"
+    "import-from": "^2.1.0",
+    "pify": "^3.0.0",
+    "pkg-up": "^2.0.0",
+    "semver": "^5.5.0"
   },
   "devDependencies": {
     "eslint": "^4.19.1",
