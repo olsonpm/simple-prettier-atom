@@ -74,12 +74,16 @@ module.exports =
 
 /***/ "./lib/simple-prettier-atom.js":
 /*!*************************************************!*\
-  !*** ./lib/simple-prettier-atom.js + 1 modules ***!
+  !*** ./lib/simple-prettier-atom.js + 3 modules ***!
   \*************************************************/
 /*! exports provided: default */
 /*! ModuleConcatenation bailout: Cannot concat with external "atom" (<- Module is not an ECMAScript module) */
+/*! ModuleConcatenation bailout: Cannot concat with external "fs" (<- Module is not an ECMAScript module) */
+/*! ModuleConcatenation bailout: Cannot concat with external "import-from" (<- Module is not an ECMAScript module) */
 /*! ModuleConcatenation bailout: Cannot concat with external "path" (<- Module is not an ECMAScript module) */
-/*! ModuleConcatenation bailout: Cannot concat with external "prettier" (<- Module is not an ECMAScript module) */
+/*! ModuleConcatenation bailout: Cannot concat with external "pify" (<- Module is not an ECMAScript module) */
+/*! ModuleConcatenation bailout: Cannot concat with external "pkg-up" (<- Module is not an ECMAScript module) */
+/*! ModuleConcatenation bailout: Cannot concat with external "semver" (<- Module is not an ECMAScript module) */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -91,9 +95,150 @@ var external_atom_ = __webpack_require__("atom");
 var external_path_ = __webpack_require__("path");
 var external_path_default = /*#__PURE__*/__webpack_require__.n(external_path_);
 
-// EXTERNAL MODULE: external "prettier"
-var external_prettier_ = __webpack_require__("prettier");
-var external_prettier_default = /*#__PURE__*/__webpack_require__.n(external_prettier_);
+// CONCATENATED MODULE: ./lib/check-whether-to-format-file.js
+//---------//
+// Imports //
+//---------//
+
+
+
+//
+//------//
+// Main //
+//------//
+
+const checkWhetherToFormatFile = (filepath, prettier) => {
+  return prettier.resolveConfigFile(filepath)
+    .then(configFilepath => {
+      if (!configFilepath) return
+
+      const ignorePath = getPrettierIgnorePath(configFilepath)
+      return Promise.all([
+        configFilepath,
+        prettier.getFileInfo(filepath, { ignorePath })
+      ])
+    })
+    .then(result => {
+      if (!result) return false
+
+      const [configFilepath, fileInfo] = result
+      return !!(
+        configFilepath &&
+        !fileInfo.ignored &&
+        fileInfo.inferredParser
+      )
+    })
+}
+
+function getPrettierIgnorePath(configFilepath) {
+  const configDir = external_path_default.a.dirname(configFilepath)
+  return external_path_default.a.join(configDir, '.prettierignore')
+}
+
+//
+//---------//
+// Exports //
+//---------//
+
+/* harmony default export */ var check_whether_to_format_file = (checkWhetherToFormatFile);
+
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __webpack_require__("fs");
+var external_fs_default = /*#__PURE__*/__webpack_require__.n(external_fs_);
+
+// EXTERNAL MODULE: external "import-from"
+var external_import_from_ = __webpack_require__("import-from");
+var external_import_from_default = /*#__PURE__*/__webpack_require__.n(external_import_from_);
+
+// EXTERNAL MODULE: external "pify"
+var external_pify_ = __webpack_require__("pify");
+var external_pify_default = /*#__PURE__*/__webpack_require__.n(external_pify_);
+
+// EXTERNAL MODULE: external "pkg-up"
+var external_pkg_up_ = __webpack_require__("pkg-up");
+var external_pkg_up_default = /*#__PURE__*/__webpack_require__.n(external_pkg_up_);
+
+// EXTERNAL MODULE: external "semver"
+var external_semver_ = __webpack_require__("semver");
+var external_semver_default = /*#__PURE__*/__webpack_require__.n(external_semver_);
+
+// CONCATENATED MODULE: ./lib/maybe-find-local-prettier-instance.js
+//---------//
+// Imports //
+//---------//
+
+
+
+
+
+
+
+
+//
+//------//
+// Init //
+//------//
+
+const minimumSupportedPrettierVersion = '1.13.0'
+
+//
+//------//
+// Main //
+//------//
+
+const maybeFindLocalPrettierInstance = filepath => {
+  return external_pkg_up_default()(external_path_default.a.dirname(filepath))
+    .then(packageJsonFilepath => {
+      return packageJsonFilepath
+        ? Promise.all([readFile(packageJsonFilepath), packageJsonFilepath])
+        : undefined
+    })
+    .then(result => {
+      if (!result) return
+
+      const [packageJsonContent, packageJsonFilepath] = result,
+        json = tryParseJson(packageJsonContent)
+
+      if (!json) return
+      const {
+        dependencies = {},
+        devDependencies = {},
+        version = '0.0.0'
+      } = json
+
+      if (
+        (!dependencies.prettier && !devDependencies.prettier)
+        || external_semver_default.a.lt(minimumSupportedPrettierVersion, version)
+      ) return
+
+      const packageJsonDir = external_path_default.a.dirname(packageJsonFilepath)
+      return external_import_from_default()(packageJsonDir, 'prettier')
+    })
+}
+
+//
+//------------------//
+// Helper Functions //
+//------------------//
+
+function readFile(filepath) {
+  return external_pify_default()(external_fs_default.a.readFile)(filepath, 'utf8')
+}
+
+function tryParseJson(string) {
+  try {
+    return JSON.parse(string);
+  } catch (e) {
+    return false;
+  }
+}
+
+//
+//---------//
+// Exports //
+//---------//
+
+/* harmony default export */ var maybe_find_local_prettier_instance = (maybeFindLocalPrettierInstance);
 
 // CONCATENATED MODULE: ./lib/maybe-format.js
 //---------//
@@ -115,44 +260,42 @@ const maybeFormat = () => {
     cursorOffset = buffer.characterIndexForPosition(position),
     filepath = buffer.getPath()
 
-  return Promise.all([
-    external_prettier_default.a.resolveConfig(filepath),
-    external_prettier_default.a.resolveConfigFile(filepath),
-  ]).then(([config, configFilepath]) => {
-    if (!configFilepath) return [config]
+  return maybe_find_local_prettier_instance(filepath)
+    .then(prettier => {
+      if (!prettier) return
 
-    const ignorePath = getPrettierIgnorePath(configFilepath)
-    return Promise.all([
-      config,
-      configFilepath,
-      external_prettier_default.a.getFileInfo(filepath, { ignorePath })
-    ])
-  })
-  .then(([config, configFilepath, fileInfo]) => {
-    if (!configFilepath || fileInfo.ignored || !fileInfo.inferredParser) return
+      return Promise.all([
+        check_whether_to_format_file(filepath, prettier),
+        prettier
+      ])
+    })
+    .then(result => {
+      if (!result) return
 
-    const { formatted, cursorOffset: updatedCursorOffset } = external_prettier_default.a.formatWithCursor(
-      buffer.getText(),
-      Object.assign(config, {
-        cursorOffset,
-        filepath,
-      })
-    )
+      const [shouldFormatFile, prettier] = result
+      if (!shouldFormatFile) return
 
-    buffer.setText(formatted)
-    const newPosition = buffer.positionForCharacterIndex(updatedCursorOffset)
-    editor.setCursorBufferPosition(newPosition)
-  })
-}
+      return Promise.all([
+        prettier.resolveConfig(filepath),
+        prettier,
+      ])
+    })
+    .then(result => {
+      if (!result) return
 
-//
-//------------------//
-// Helper Functions //
-//------------------//
+      const [config, prettier] = result,
+        { formatted, cursorOffset: updatedCursorOffset } = prettier.formatWithCursor(
+          buffer.getText(),
+          Object.assign(config, {
+            cursorOffset,
+            filepath,
+          })
+        )
 
-function getPrettierIgnorePath(configFilepath) {
-  const configDir = external_path_default.a.dirname(configFilepath)
-  return external_path_default.a.join(configDir, '.prettierignore')
+      buffer.setText(formatted)
+      const newPosition = buffer.positionForCharacterIndex(updatedCursorOffset)
+      editor.setCursorBufferPosition(newPosition)
+    })
 }
 
 //
@@ -173,20 +316,38 @@ function getPrettierIgnorePath(configFilepath) {
 
 //
 //------//
+// Init //
+//------//
+
+const setOfBuffers = new Set()
+
+//
+//------//
 // Main //
 //------//
 
 /* harmony default export */ var simple_prettier_atom = __webpack_exports__["default"] = ({
   activate() {
-    const buffer = atom.workspace.getActiveTextEditor().getBuffer()
 
     this.disposables = new external_atom_["CompositeDisposable"](
       atom.commands.add('atom-workspace', {
         'simple-prettier-atom:format': maybe_format,
       }),
 
-      buffer.onWillSave(maybe_format)
+      atom.workspace.observeTextEditors(editor => {
+        const buffer = editor.getBuffer()
+
+        if (setOfBuffers.has(buffer)) return
+
+        setOfBuffers.add(buffer)
+        const disposable = buffer.onWillSave(maybe_format)
+        buffer.onDidDestroy(() => {
+          disposable.dispose()
+          setOfBuffers.delete(buffer)
+        })
+      })
     )
+
   },
 
   deactivate() {
@@ -209,6 +370,30 @@ module.exports = require("atom");
 
 /***/ }),
 
+/***/ "fs":
+/*!*********************!*\
+  !*** external "fs" ***!
+  \*********************/
+/*! no static exports found */
+/*! ModuleConcatenation bailout: Module is not an ECMAScript module */
+/***/ (function(module, exports) {
+
+module.exports = require("fs");
+
+/***/ }),
+
+/***/ "import-from":
+/*!******************************!*\
+  !*** external "import-from" ***!
+  \******************************/
+/*! no static exports found */
+/*! ModuleConcatenation bailout: Module is not an ECMAScript module */
+/***/ (function(module, exports) {
+
+module.exports = require("import-from");
+
+/***/ }),
+
 /***/ "path":
 /*!***********************!*\
   !*** external "path" ***!
@@ -221,15 +406,39 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ "prettier":
-/*!***************************!*\
-  !*** external "prettier" ***!
-  \***************************/
+/***/ "pify":
+/*!***********************!*\
+  !*** external "pify" ***!
+  \***********************/
 /*! no static exports found */
 /*! ModuleConcatenation bailout: Module is not an ECMAScript module */
 /***/ (function(module, exports) {
 
-module.exports = require("prettier");
+module.exports = require("pify");
+
+/***/ }),
+
+/***/ "pkg-up":
+/*!*************************!*\
+  !*** external "pkg-up" ***!
+  \*************************/
+/*! no static exports found */
+/*! ModuleConcatenation bailout: Module is not an ECMAScript module */
+/***/ (function(module, exports) {
+
+module.exports = require("pkg-up");
+
+/***/ }),
+
+/***/ "semver":
+/*!*************************!*\
+  !*** external "semver" ***!
+  \*************************/
+/*! no static exports found */
+/*! ModuleConcatenation bailout: Module is not an ECMAScript module */
+/***/ (function(module, exports) {
+
+module.exports = require("semver");
 
 /***/ })
 
