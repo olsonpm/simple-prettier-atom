@@ -1,6 +1,6 @@
 {
   "name": "simple-prettier-atom",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Just runs prettier on the open file and does what you'd expect",
   "main": "index.bundle.js",
   "scripts": {

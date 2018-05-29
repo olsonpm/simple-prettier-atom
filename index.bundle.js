@@ -104,6 +104,13 @@ var external_path_default = /*#__PURE__*/__webpack_require__.n(external_path_);
 
 //
 //------//
+// Init //
+//------//
+
+const setOfUnsupportedParsers = new Set(['vue'])
+
+//
+//------//
 // Main //
 //------//
 
@@ -125,7 +132,8 @@ const checkWhetherToFormatFile = (filepath, prettier) => {
       return !!(
         configFilepath &&
         !fileInfo.ignored &&
-        fileInfo.inferredParser
+        fileInfo.inferredParser &&
+        !setOfUnsupportedParsers.has(fileInfo.inferredParser)
       )
     })
 }
