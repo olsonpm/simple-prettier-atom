@@ -220,7 +220,13 @@ const maybeFindLocalPrettierInstance = filepath => {
       ) return
 
       const packageJsonDir = external_path_default.a.dirname(packageJsonFilepath)
-      return external_import_from_default()(packageJsonDir, 'prettier')
+
+      let prettierInstance
+      try {
+        prettierInstance = external_import_from_default()(packageJsonDir, 'prettier')
+      } catch(_unused_error) {} // eslint-disable-line no-empty
+
+      return prettierInstance
     })
 }
 
