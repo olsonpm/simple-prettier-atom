@@ -20,6 +20,18 @@ export default {
     },
     webpackNodeExternals(),
   ],
+  module: {
+    rules: [{
+      test: /\.js$/,
+      exclude: /\/node_modules\//,
+      use: {
+        loader: 'babel-loader',
+        options: {
+          plugins: ['macros'],
+        }
+      },
+    }],
+  },
   plugins: [
     new FriendlyErrorsWebpackPlugin(),
     new webpack.optimize.ModuleConcatenationPlugin(),
