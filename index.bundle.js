@@ -99,57 +99,40 @@ var external_path_default = /*#__PURE__*/__webpack_require__.n(external_path_);
 //---------//
 // Imports //
 //---------//
-
-
-
-//
+ //
 //------//
 // Init //
 //------//
 
-const setOfUnsupportedParsers = new Set(['vue'])
-
-//
+const setOfUnsupportedParsers = new Set(['vue']); //
 //------//
 // Main //
 //------//
 
 const checkWhetherToFormatFile = (filepath, prettier) => {
-  return prettier.resolveConfigFile(filepath)
-    .then(configFilepath => {
-      if (!configFilepath) return
-
-      const ignorePath = getPrettierIgnorePath(configFilepath)
-      return Promise.all([
-        configFilepath,
-        prettier.getFileInfo(filepath, { ignorePath })
-      ])
-    })
-    .then(result => {
-      if (!result) return false
-
-      const [configFilepath, fileInfo] = result
-      return !!(
-        configFilepath &&
-        !fileInfo.ignored &&
-        fileInfo.inferredParser &&
-        !setOfUnsupportedParsers.has(fileInfo.inferredParser)
-      )
-    })
-}
+  return prettier.resolveConfigFile(filepath).then(configFilepath => {
+    if (!configFilepath) return;
+    const ignorePath = getPrettierIgnorePath(configFilepath);
+    return Promise.all([configFilepath, prettier.getFileInfo(filepath, {
+      ignorePath
+    })]);
+  }).then(result => {
+    if (!result) return false;
+    const [configFilepath, fileInfo] = result;
+    return !!(configFilepath && !fileInfo.ignored && fileInfo.inferredParser && !setOfUnsupportedParsers.has(fileInfo.inferredParser));
+  });
+};
 
 function getPrettierIgnorePath(configFilepath) {
-  const configDir = external_path_default.a.dirname(configFilepath)
-  return external_path_default.a.join(configDir, '.prettierignore')
-}
-
-//
+  const configDir = external_path_default.a.dirname(configFilepath);
+  return external_path_default.a.join(configDir, '.prettierignore');
+} //
 //---------//
 // Exports //
 //---------//
 
-/* harmony default export */ var check_whether_to_format_file = (checkWhetherToFormatFile);
 
+/* harmony default export */ var check_whether_to_format_file = (checkWhetherToFormatFile);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __webpack_require__("fs");
 var external_fs_default = /*#__PURE__*/__webpack_require__.n(external_fs_);
@@ -179,64 +162,48 @@ var external_semver_default = /*#__PURE__*/__webpack_require__.n(external_semver
 
 
 
-
-
-
-//
+ //
 //------//
 // Init //
 //------//
 
-const minimumSupportedPrettierVersion = '1.13.0'
-
-//
+const minimumSupportedPrettierVersion = '1.13.0'; //
 //------//
 // Main //
 //------//
 
 const maybeFindLocalPrettierInstance = filepath => {
-  return external_pkg_up_default()(external_path_default.a.dirname(filepath))
-    .then(packageJsonFilepath => {
-      return packageJsonFilepath
-        ? Promise.all([readFile(packageJsonFilepath), packageJsonFilepath])
-        : undefined
-    })
-    .then(result => {
-      if (!result) return
+  return external_pkg_up_default()(external_path_default.a.dirname(filepath)).then(packageJsonFilepath => {
+    return packageJsonFilepath ? Promise.all([readFile(packageJsonFilepath), packageJsonFilepath]) : undefined;
+  }).then(result => {
+    if (!result) return;
+    const [packageJsonContent, packageJsonFilepath] = result,
+          json = tryParseJson(packageJsonContent);
+    if (!json) return;
+    const {
+      dependencies = {},
+      devDependencies = {},
+      version = '0.0.0'
+    } = json;
+    if (!dependencies.prettier && !devDependencies.prettier || external_semver_default.a.lt(minimumSupportedPrettierVersion, version)) return;
+    const packageJsonDir = external_path_default.a.dirname(packageJsonFilepath);
+    let prettierInstance;
 
-      const [packageJsonContent, packageJsonFilepath] = result,
-        json = tryParseJson(packageJsonContent)
+    try {
+      prettierInstance = external_import_from_default()(packageJsonDir, 'prettier');
+    } catch (_unused_error) {} // eslint-disable-line no-empty
 
-      if (!json) return
-      const {
-        dependencies = {},
-        devDependencies = {},
-        version = '0.0.0'
-      } = json
 
-      if (
-        (!dependencies.prettier && !devDependencies.prettier)
-        || external_semver_default.a.lt(minimumSupportedPrettierVersion, version)
-      ) return
-
-      const packageJsonDir = external_path_default.a.dirname(packageJsonFilepath)
-
-      let prettierInstance
-      try {
-        prettierInstance = external_import_from_default()(packageJsonDir, 'prettier')
-      } catch(_unused_error) {} // eslint-disable-line no-empty
-
-      return prettierInstance
-    })
-}
-
-//
+    return prettierInstance;
+  });
+}; //
 //------------------//
 // Helper Functions //
 //------------------//
 
+
 function readFile(filepath) {
-  return external_pify_default()(external_fs_default.a.readFile)(filepath, 'utf8')
+  return external_pify_default()(external_fs_default.a.readFile)(filepath, 'utf8');
 }
 
 function tryParseJson(string) {
@@ -245,130 +212,109 @@ function tryParseJson(string) {
   } catch (e) {
     return false;
   }
-}
-
-//
+} //
 //---------//
 // Exports //
 //---------//
 
-/* harmony default export */ var maybe_find_local_prettier_instance = (maybeFindLocalPrettierInstance);
 
+/* harmony default export */ var maybe_find_local_prettier_instance = (maybeFindLocalPrettierInstance);
 // CONCATENATED MODULE: ./lib/maybe-format.js
 //---------//
 // Imports //
 //---------//
 
-
-
-
-//
+ //
 //------//
 // Main //
 //------//
 
 const maybeFormat = () => {
   const editor = atom.workspace.getActiveTextEditor(),
-    buffer = editor.getBuffer(),
-    position = editor.getCursorBufferPosition(),
-    cursorOffset = buffer.characterIndexForPosition(position),
-    filepath = buffer.getPath()
+        buffer = editor.getBuffer(),
+        position = editor.getCursorBufferPosition(),
+        cursorOffset = buffer.characterIndexForPosition(position),
+        filepath = buffer.getPath();
+  return maybe_find_local_prettier_instance(filepath).then(prettier => {
+    if (!prettier) return;
+    return Promise.all([check_whether_to_format_file(filepath, prettier), prettier]);
+  }).then(result => {
+    if (!result) return;
+    const [shouldFormatFile, prettier] = result;
+    if (!shouldFormatFile) return;
+    return Promise.all([prettier.resolveConfig(filepath), prettier]);
+  }).then(result => {
+    if (!result) return;
+    const [config, prettier] = result;
+    let formatResult;
 
-  return maybe_find_local_prettier_instance(filepath)
-    .then(prettier => {
-      if (!prettier) return
+    try {
+      formatResult = prettier.formatWithCursor(buffer.getText(), Object.assign(config, {
+        cursorOffset,
+        filepath
+      }));
+    } // TODO: add option to log formatting errors to console
+    catch (_unused_formattingError) {
+      // if we can't format the code then there ain't nothin else to do!
+      return;
+    }
 
-      return Promise.all([
-        check_whether_to_format_file(filepath, prettier),
-        prettier
-      ])
-    })
-    .then(result => {
-      if (!result) return
-
-      const [shouldFormatFile, prettier] = result
-      if (!shouldFormatFile) return
-
-      return Promise.all([
-        prettier.resolveConfig(filepath),
-        prettier,
-      ])
-    })
-    .then(result => {
-      if (!result) return
-
-      const [config, prettier] = result,
-        { formatted, cursorOffset: updatedCursorOffset } = prettier.formatWithCursor(
-          buffer.getText(),
-          Object.assign(config, {
-            cursorOffset,
-            filepath,
-          })
-        )
-
-      buffer.setText(formatted)
-      const newPosition = buffer.positionForCharacterIndex(updatedCursorOffset)
-      editor.setCursorBufferPosition(newPosition)
-    })
-}
-
-//
+    const {
+      formatted,
+      cursorOffset: updatedCursorOffset
+    } = formatResult;
+    buffer.setText(formatted);
+    const newPosition = buffer.positionForCharacterIndex(updatedCursorOffset);
+    editor.setCursorBufferPosition(newPosition);
+  }).catch(error => {
+    /* eslint-disable no-console */
+    console.error("The following unexpected error occurred in 'simple-prettier-atom'\n\nIf this package is up to date, please file an issue in the github repo\n  with the error contents so I can make sure to handle it\n  appropriately.\n\nSorry for the hassle and I appreciate your patience");
+    console.error(error);
+    /* eslint-enable no-console */
+  });
+}; //
 //---------//
 // Exports //
 //---------//
 
-/* harmony default export */ var maybe_format = (maybeFormat);
 
+/* harmony default export */ var maybe_format = (maybeFormat);
 // CONCATENATED MODULE: ./lib/simple-prettier-atom.js
 //---------//
 // Imports //
 //---------//
 
-
-
-
-
-//
+ //
 //------//
 // Init //
 //------//
 
-const setOfBuffers = new Set()
-
-//
+const setOfBuffers = new Set(); //
 //------//
 // Main //
 //------//
 
 /* harmony default export */ var simple_prettier_atom = __webpack_exports__["default"] = ({
   activate() {
-
-    this.disposables = new external_atom_["CompositeDisposable"](
-      atom.commands.add('atom-workspace', {
-        'simple-prettier-atom:format': maybe_format,
-      }),
-
-      atom.workspace.observeTextEditors(editor => {
-        const buffer = editor.getBuffer()
-
-        if (setOfBuffers.has(buffer)) return
-
-        setOfBuffers.add(buffer)
-        const disposable = buffer.onWillSave(maybe_format)
-        buffer.onDidDestroy(() => {
-          disposable.dispose()
-          setOfBuffers.delete(buffer)
-        })
-      })
-    )
-
+    this.disposables = new external_atom_["CompositeDisposable"](atom.commands.add('atom-workspace', {
+      'simple-prettier-atom:format': maybe_format
+    }), atom.workspace.observeTextEditors(editor => {
+      const buffer = editor.getBuffer();
+      if (setOfBuffers.has(buffer)) return;
+      setOfBuffers.add(buffer);
+      const disposable = buffer.onWillSave(maybe_format);
+      buffer.onDidDestroy(() => {
+        disposable.dispose();
+        setOfBuffers.delete(buffer);
+      });
+    }));
   },
 
   deactivate() {
-    this.disposables.dispose()
-  },
-});
+    this.disposables.dispose();
+  }
 
+});
 
 /***/ }),
 

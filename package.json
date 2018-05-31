@@ -1,6 +1,6 @@
 {
   "name": "simple-prettier-atom",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Just runs prettier on the open file and does what you'd expect",
   "main": "index.bundle.js",
   "scripts": {
@@ -28,6 +28,10 @@
     "semver": "^5.5.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.0.0-beta.49",
+    "babel-loader": "^8.0.0-beta.3",
+    "babel-plugin-macros": "^2.2.1",
+    "dedent": "github:olsonpm/dedent#adbb20c4632e8b37803d9813f9b98377ae13b7f9",
     "eslint": "^4.19.1",
     "eslint-config-personal": "github:olsonpm/eslint-config-personal",
     "esm": "^3.0.38",
