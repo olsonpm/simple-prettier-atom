@@ -182,19 +182,17 @@ const maybeFindLocalPrettierInstance = filepath => {
     if (!json) return;
     const {
       dependencies = {},
-      devDependencies = {},
-      version = '0.0.0'
+      devDependencies = {}
     } = json;
-    if (!dependencies.prettier && !devDependencies.prettier || external_semver_default.a.lt(minimumSupportedPrettierVersion, version)) return;
+    if (!(dependencies.prettier || devDependencies.prettier)) return;
     const packageJsonDir = external_path_default.a.dirname(packageJsonFilepath);
-    let prettierInstance;
 
     try {
-      prettierInstance = external_import_from_default()(packageJsonDir, 'prettier');
-    } catch (_unused_error) {} // eslint-disable-line no-empty
-
-
-    return prettierInstance;
+      const prettier = external_import_from_default()(packageJsonDir, 'prettier');
+      return external_semver_default.a.gte(prettier.version, minimumSupportedPrettierVersion) ? prettier : undefined;
+    } catch (_unused_error) {
+      return;
+    }
   });
 }; //
 //------------------//
