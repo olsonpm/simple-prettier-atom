@@ -173,6 +173,7 @@ const minimumSupportedPrettierVersion = '1.13.0'; //
 //------//
 
 const maybeFindLocalPrettierInstance = filepath => {
+  if (!filepath) return Promise.resolve();
   return external_pkg_up_default()(external_path_default.a.dirname(filepath)).then(packageJsonFilepath => {
     return packageJsonFilepath ? Promise.all([readFile(packageJsonFilepath), packageJsonFilepath]) : undefined;
   }).then(result => {
